@@ -34,7 +34,7 @@ from app.db.job_store import (
     transition_to_failed,
     transition_to_in_progress,
 )
-from app.db.session import get_session
+from app.db.session import get_session, init_db
 from app.github_client import fetch_pr_files
 from app.models import PullRequestWebhookPayload
 
@@ -48,6 +48,10 @@ logger = logging.getLogger("pr-sentinel")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manages background worker lifecycle with application startup and shutdown."""
+    try:
+        await init_db()
+    except Exception as exc:
+        logger.warning("Could not auto-initialize DB on startup: %s", exc)
     if settings.WORKER_MODE != "server":
         worker.start()
     yield
@@ -166,6 +170,8 @@ async def process_pull_request_review(
     await worker.process_job_by_id(job_id)
 
 
+@app.post("/")
+@app.post("/webhook")
 @app.post("/webhook/github")
 async def github_webhook(
     request: Request,

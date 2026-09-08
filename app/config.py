@@ -35,7 +35,7 @@ class Settings:
 
     # Database configuration for persistent job and idempotency storage
     DATABASE_URL: str = os.environ.get(
-        "DATABASE_URL", "postgresql+asyncpg://postgres@127.0.0.1:25432/pr_sentinel"
+        "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/pr_sentinel"
     )
 
     # Maximum lease duration (seconds) before an in_progress or queued job is considered stale

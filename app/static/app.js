@@ -210,14 +210,23 @@ function renderSimpleMarkdown(md) {
   // Inline Code
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
 
+  // Blockquotes (&gt; because escapeHtml ran first)
+  html = html.replace(/^&gt; (.*$)/gim, '<blockquote style="border-left:3px solid var(--accent-blue); padding-left:0.75rem; margin:0.5rem 0; color:var(--text-secondary); background:var(--bg-tertiary); padding:0.4rem 0.75rem; border-radius:0 4px 4px 0;">$1</blockquote>');
+
+  // Horizontal rules
+  html = html.replace(/^---$/gim, '<hr style="border:none; border-top:1px solid var(--border-primary); margin:0.75rem 0;" />');
+
   // Bullet Lists
-  html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
-  html = html.replace(/^- (.*$)/gim, '<li>$1</li>');
-  html = html.replace(/(<li>.*<\/li>)/gims, '<ul style="padding-left:1.2rem; margin:0.5rem 0;">$1</ul>');
+  html = html.replace(/^[\*\-] (.*$)/gim, '<div style="display:flex; gap:0.4rem; margin:0.2rem 0;"><span>•</span><span>$1</span></div>');
+
+  // Numbered Lists
+  html = html.replace(/^(\d+)\. (.*$)/gim, '<div style="display:flex; gap:0.4rem; margin:0.3rem 0;"><strong style="color:var(--accent-blue);">$1.</strong><span>$2</span></div>');
 
   // Paragraphs
-  html = html.replace(/\n\n+/g, '</p><p style="margin-bottom:0.6rem;">');
-  return `<div class="markdown-body"><p style="margin-bottom:0.6rem;">${html}</p></div>`;
+  html = html.replace(/\n\n+/g, '<div style="height:0.5rem;"></div>');
+  html = html.replace(/\n/g, '<br/>');
+
+  return `<div class="markdown-body">${html}</div>`;
 }
 
 // Compute severity counts from findings array
@@ -449,8 +458,12 @@ function renderTable() {
 
 async function openReviewDetails(jobId) {
   try {
-    DOM.modalFindingsContainer.innerHTML = '<div class="skeleton skeleton-row" style="height:100px;"></div>';
-    DOM.reviewModal.classList.add('active');
+    if (DOM.modalFindingsContainer) {
+      DOM.modalFindingsContainer.innerHTML = '<div class="skeleton skeleton-row" style="height:100px;"></div>';
+    }
+    if (DOM.reviewModal) {
+      DOM.reviewModal.classList.add('active');
+    }
     document.body.style.overflow = 'hidden';
 
     // Fetch freshest detail from API
@@ -458,63 +471,73 @@ async function openReviewDetails(jobId) {
     state.selectedJob = job;
 
     // Header & Meta
-    DOM.modalTitle.textContent = `${job.repo_full_name} #${job.pr_number}`;
-    DOM.modalRepoName.textContent = job.repo_full_name;
-    DOM.modalPrNumber.textContent = `#${job.pr_number}`;
-    DOM.modalCommitSha.textContent = (job.head_sha || '').slice(0, 8);
-    DOM.modalReviewKey.textContent = job.review_key || '—';
-    DOM.modalWorkerId.textContent = job.worker_id ? `Worker: ${job.worker_id}` : 'Worker: unassigned';
-    DOM.modalDuration.textContent = job.duration_seconds ? `Duration: ${job.duration_seconds}s` : 'Duration: —';
+    if (DOM.modalTitle) DOM.modalTitle.textContent = `${job.repo_full_name} #${job.pr_number}`;
+    if (DOM.modalRepoName) DOM.modalRepoName.textContent = job.repo_full_name || '—';
+    if (DOM.modalPrNumber) DOM.modalPrNumber.textContent = `#${job.pr_number}`;
+    if (DOM.modalCommitSha) DOM.modalCommitSha.textContent = (job.head_sha || '').slice(0, 8);
+    if (DOM.modalReviewKey) DOM.modalReviewKey.textContent = job.review_key || '—';
+    if (DOM.modalWorkerId) DOM.modalWorkerId.textContent = job.worker_id ? `Worker: ${job.worker_id}` : 'Worker: unassigned';
+    if (DOM.modalDuration) DOM.modalDuration.textContent = job.duration_seconds ? `Duration: ${job.duration_seconds}s` : 'Duration: —';
 
     // Status Badge
-    DOM.modalStatusBadge.className = `badge badge-${job.status}`;
-    DOM.modalStatusBadge.textContent = job.status.replace('_', ' ');
+    if (DOM.modalStatusBadge) {
+      DOM.modalStatusBadge.className = `badge badge-${job.status}`;
+      DOM.modalStatusBadge.textContent = (job.status || '').replace('_', ' ');
+    }
 
     // Verdict Badge
-    const verdict = (job.final_verdict || '').toLowerCase();
-    if (verdict === 'approve') {
-      DOM.modalVerdictBadge.className = 'verdict-badge verdict-approve';
-      DOM.modalVerdictBadge.textContent = '✓ Approved';
-      DOM.modalVerdictBadge.style.display = 'inline-flex';
-    } else if (verdict === 'request_changes') {
-      DOM.modalVerdictBadge.className = 'verdict-badge verdict-request_changes';
-      DOM.modalVerdictBadge.textContent = '✕ Changes Requested';
-      DOM.modalVerdictBadge.style.display = 'inline-flex';
-    } else if (verdict === 'comment') {
-      DOM.modalVerdictBadge.className = 'verdict-badge verdict-comment';
-      DOM.modalVerdictBadge.textContent = '💬 Comment';
-      DOM.modalVerdictBadge.style.display = 'inline-flex';
-    } else {
-      DOM.modalVerdictBadge.style.display = 'none';
+    if (DOM.modalVerdictBadge) {
+      const verdict = (job.final_verdict || '').toLowerCase();
+      if (verdict === 'approve') {
+        DOM.modalVerdictBadge.className = 'verdict-badge verdict-approve';
+        DOM.modalVerdictBadge.textContent = '✓ Approved';
+        DOM.modalVerdictBadge.style.display = 'inline-flex';
+      } else if (verdict === 'request_changes') {
+        DOM.modalVerdictBadge.className = 'verdict-badge verdict-request_changes';
+        DOM.modalVerdictBadge.textContent = '✕ Changes Requested';
+        DOM.modalVerdictBadge.style.display = 'inline-flex';
+      } else if (verdict === 'comment') {
+        DOM.modalVerdictBadge.className = 'verdict-badge verdict-comment';
+        DOM.modalVerdictBadge.textContent = '💬 Comment';
+        DOM.modalVerdictBadge.style.display = 'inline-flex';
+      } else {
+        DOM.modalVerdictBadge.style.display = 'none';
+      }
     }
 
     // Retry Button Visibility
-    if (job.status === 'failed') {
-      DOM.modalRetryBtn.style.display = 'inline-flex';
-      DOM.modalRetryBtn.onclick = () => handleRetry(job.job_id);
-    } else {
-      DOM.modalRetryBtn.style.display = 'none';
+    if (DOM.modalRetryBtn) {
+      if (job.status === 'failed') {
+        DOM.modalRetryBtn.style.display = 'inline-flex';
+        DOM.modalRetryBtn.onclick = () => handleRetry(job.job_id);
+      } else {
+        DOM.modalRetryBtn.style.display = 'none';
+      }
     }
 
     // Failure / Error Box
-    if (job.error_message) {
-      DOM.modalErrorBox.style.display = 'block';
-      DOM.modalErrorMessage.textContent = job.error_message;
-    } else {
-      DOM.modalErrorBox.style.display = 'none';
+    if (DOM.modalErrorBox) {
+      if (job.error_message) {
+        DOM.modalErrorBox.style.display = 'block';
+        if (DOM.modalErrorMessage) DOM.modalErrorMessage.textContent = job.error_message;
+      } else {
+        DOM.modalErrorBox.style.display = 'none';
+      }
     }
 
     // Executive Summary
-    if (job.summary) {
-      DOM.modalSummaryBox.style.display = 'block';
-      DOM.modalSummaryContent.innerHTML = renderSimpleMarkdown(job.summary);
-    } else {
-      DOM.modalSummaryBox.style.display = 'none';
+    if (DOM.modalSummaryBox) {
+      if (job.summary) {
+        DOM.modalSummaryBox.style.display = 'block';
+        if (DOM.modalSummaryContent) DOM.modalSummaryContent.innerHTML = renderSimpleMarkdown(job.summary);
+      } else {
+        DOM.modalSummaryBox.style.display = 'none';
+      }
     }
 
     // Findings Breakdown
     const findings = job.findings || [];
-    DOM.modalFindingsCount.textContent = `(${findings.length})`;
+    if (DOM.modalFindingsCount) DOM.modalFindingsCount.textContent = `(${findings.length})`;
 
     if (findings.length === 0) {
       DOM.modalFindingsContainer.innerHTML = `
