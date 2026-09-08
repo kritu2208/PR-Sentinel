@@ -45,35 +45,35 @@ Autonomous multi-line comments and batch review summaries posted directly onto G
 ```mermaid
 flowchart TD
     subgraph Intake ["1. Intake & Deduplication"]
-        GH[GitHub Pull Request Event] -->|POST /webhook| WH[FastAPI Webhook Handler]
-        WH -->|HMAC-SHA256| SIG[Signature Verification]
-        SIG -->|Deduplicate & Claim| DB[(Durable Job Queue DB)]
-        WH -.->|HTTP 202 Accepted <50ms| GH
+        GH["GitHub Pull Request Event"] -->|"POST /webhook"| WH["FastAPI Webhook Handler"]
+        WH -->|"HMAC-SHA256"| SIG["Signature Verification"]
+        SIG -->|"Deduplicate & Claim"| DB[("Durable Job Queue DB")]
+        WH -.->|"HTTP 202 Accepted <50ms"| GH
     end
 
     subgraph WorkerLoop ["2. Durable Worker Engine"]
-        DB -->|Pessimistic Lease Claim| WORKER[Durable Worker Engine]
-        WORKER -->|Heartbeat / Lease Fencing| DB
+        DB -->|"Pessimistic Lease Claim"| WORKER["Durable Worker Engine"]
+        WORKER -->|"Heartbeat / Lease Fencing"| DB
     end
 
     subgraph Pipeline ["3. LangGraph Review Graph"]
-        WORKER --> RETRIEVER[1. Retriever: AST & Import Context]
-        RETRIEVER --> ANALYZER[2. Analyzer: Groq LLM]
-        ANALYZER --> VALIDATOR[3. Validator: Diff Hunk Line Guard]
-        VALIDATOR --> INVESTIGATOR[4. Investigator: Root Cause & Evidence]
-        INVESTIGATOR --> AGGREGATOR[5. Aggregator: Deduplication & Verdict]
-        AGGREGATOR --> POSTER[6. Poster: Atomic Review & Status]
+        WORKER --> RETRIEVER["1. Retriever: AST & Context"]
+        RETRIEVER --> ANALYZER["2. Analyzer: Groq LLM"]
+        ANALYZER --> VALIDATOR["3. Validator: Diff Line Guard"]
+        VALIDATOR --> INVESTIGATOR["4. Investigator: Root Cause"]
+        INVESTIGATOR --> AGGREGATOR["5. Aggregator: Verdict"]
+        AGGREGATOR --> POSTER["6. Poster: Atomic Review"]
     end
 
     subgraph GitHubDelivery ["4. Delivery & GitHub Sync"]
-        POSTER -->|POST /pulls/{pr}/reviews| GH_REV[GitHub Pull Request Review]
-        POSTER -->|POST /statuses/{sha}| GH_STAT[Commit Status Check]
-        POSTER -->|Record Summary & Findings| DB
+        POSTER -->|"POST /pulls/:pr/reviews"| GH_REV["GitHub Pull Request Review"]
+        POSTER -->|"POST /statuses/:sha"| GH_STAT["Commit Status Check"]
+        POSTER -->|"Record Summary & Findings"| DB
     end
 
     subgraph DashboardView ["5. Observability & Dashboard"]
-        DASH[Developer Dashboard & REST API] -->|GET /jobs, /stats, /reviews/{id}| DB
-        DASH -->|POST /jobs/{id}/retry| WORKER
+        DASH["Dashboard & REST API"] -->|"GET /jobs, /stats, /reviews/:id"| DB
+        DASH -->|"POST /jobs/:id/retry"| WORKER
     end
 
     classDef primary fill:#0284c7,stroke:#38bdf8,stroke-width:2px,color:#ffffff;
