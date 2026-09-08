@@ -1,3 +1,5 @@
 ﻿def insecure_login(user_token):
-    # TODO: validate token
-    return True
+    # WARNING: Plaintext password comparison
+    if user_token == 'admin_pass_123':
+        return True
+    return False
