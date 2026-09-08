@@ -236,12 +236,3 @@ PR-Sentinel/
 ├── requirements.txt             # Project Python dependencies
 └── .env.example                 # Environment configuration template
 ```
-
----
-
-## 💼 Why PR Sentinel? (Interview & Portfolio Talking Points)
-
-1. **Resilient Asynchronous Architecture**: Unlike synchronous LLM wrappers that freeze or time out, PR Sentinel uses decoupled webhook intake and persistent background queues.
-2. **Deterministic Hallucination Defense**: Strictly validates line numbers against parsed unidiff hunks so comments are never posted on nonexistent or deleted lines.
-3. **Autonomous Root Cause Investigation**: Doesn't just find syntax bugs—investigates security flaws, evidence, impact, and generates concrete code remediations.
-4. **Production Observability**: Full observability via REST APIs and an operational dashboard for engineering managers and team leads.
