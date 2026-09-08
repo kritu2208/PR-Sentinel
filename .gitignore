@@ -1,0 +1,54 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.env
+
+# Python & Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Testing & Quality
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Databases & SQLite
+*.db
+*.sqlite
+*.sqlite3
+test_*.db
+
+# Logs & Runtime
+*.log
+*.pid
+logs/
+
+# Binary Executables & Tooling
+*.exe
+cloudflared*
+
+# IDE & Editor Metadata
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Build & Distribution
+dist/
+build/
+*.egg-info/
+*.egg

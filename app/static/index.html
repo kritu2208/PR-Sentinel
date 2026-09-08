@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PR Sentinel — Autonomous AI Code Review Dashboard</title>
+  <meta name="description" content="Production-grade AI Code Review & Autonomous Root Cause Analysis Platform for GitHub Pull Requests.">
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container navbar-content">
+      <div class="brand-section">
+        <div class="brand-logo">🛡️</div>
+        <div class="brand-title-wrap">
+          <div class="brand-title">
+            PR SENTINEL
+            <span class="brand-badge">AI Platform</span>
+          </div>
+          <div class="brand-subtitle">Autonomous Code Review & Root Cause Engine</div>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <!-- Live Health Pill -->
+        <div class="health-pill" id="healthPill" title="PostgreSQL connection & background worker loop status">
+          <span class="health-dot" id="healthIndicator"></span>
+          <span id="healthStatusText">Connecting...</span>
+        </div>
+
+        <!-- Auto Refresh Selector -->
+        <select class="select-control" id="autoRefreshSelect" title="Auto-refresh polling frequency">
+          <option value="5000" selected>Auto: 5s</option>
+          <option value="15000">Auto: 15s</option>
+          <option value="30000">Auto: 30s</option>
+          <option value="0">Auto: Off</option>
+        </select>
+
+        <!-- Refresh Button -->
+        <button class="btn btn-sm" id="refreshBtn" title="Manually refresh reviews">
+          ↻ Refresh
+        </button>
+
+        <!-- Dark / Light Theme Toggle -->
+        <button class="btn btn-icon-only" id="themeToggleBtn" title="Toggle Theme" aria-label="Toggle Theme">
+          🌙
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Dashboard -->
+  <main>
+    <div class="container">
+
+      <!-- Section: Overview Header -->
+      <div class="section-header">
+        <h1 class="section-title">Review Operations & Performance</h1>
+        <p class="section-desc">Real-time telemetry and findings for pull requests analyzed by PR Sentinel.</p>
+      </div>
+
+      <!-- 1. Stats Overview KPI Grid -->
+      <section class="stats-grid" aria-label="Operational Metrics">
+        <!-- Total Reviews Card -->
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Total Reviews</span>
+            <div class="stat-icon" style="background:var(--accent-blue-bg); color:var(--accent-blue);">📊</div>
+          </div>
+          <div class="stat-value" id="statTotal">—</div>
+          <div class="stat-footer">
+            <span>All-time PR review executions</span>
+          </div>
+        </div>
+
+        <!-- Completed Reviews Card -->
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Completed Reviews</span>
+            <div class="stat-icon" style="background:var(--status-success-bg); color:var(--status-success);">✓</div>
+          </div>
+          <div class="stat-value" id="statCompleted" style="color:var(--status-success);">—</div>
+          <div class="stat-footer">
+            <span>Success Rate: <strong id="statSuccessRate">0%</strong></span>
+          </div>
+          <div class="stat-progress-bar">
+            <div class="stat-progress-fill" id="statProgressBar" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- In Progress / Queued Card -->
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Active in Queue</span>
+            <div class="stat-icon" style="background:var(--accent-purple-bg); color:var(--accent-purple);">⚡</div>
+          </div>
+          <div class="stat-value" id="statActive" style="color:var(--accent-purple);">—</div>
+          <div class="stat-footer">
+            <span>Worker pipeline processing</span>
+          </div>
+        </div>
+
+        <!-- Failed Reviews Card -->
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Failed Reviews</span>
+            <div class="stat-icon" style="background:var(--status-danger-bg); color:var(--status-danger);">⚠️</div>
+          </div>
+          <div class="stat-value" id="statFailed" style="color:var(--status-danger);">—</div>
+          <div class="stat-footer">
+            <span>Retryable with 1-click retry</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Risk & Finding Severity Summary Banner -->
+      <section class="severity-summary-card" aria-label="Risk & Severity Summary">
+        <div class="sev-summary-left">
+          <div class="sev-summary-title">
+            <span>🛡️ Finding Severity Breakdown</span>
+          </div>
+          <div class="sev-summary-subtitle" id="sevTotalFindings">
+            Aggregated defect and security findings across recent pull requests
+          </div>
+        </div>
+
+        <div class="sev-pills-row">
+          <div class="sev-pill critical" title="Critical Severity Findings">
+            <span>CRITICAL</span>
+            <span class="sev-pill-count" id="sevCritCount">0</span>
+          </div>
+          <div class="sev-pill high" title="High Severity Findings">
+            <span>HIGH</span>
+            <span class="sev-pill-count" id="sevHighCount">0</span>
+          </div>
+          <div class="sev-pill medium" title="Medium Severity Findings">
+            <span>MEDIUM</span>
+            <span class="sev-pill-count" id="sevMedCount">0</span>
+          </div>
+          <div class="sev-pill low" title="Low Severity Findings">
+            <span>LOW</span>
+            <span class="sev-pill-count" id="sevLowCount">0</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Reviews List Table Section -->
+      <section aria-label="Review List">
+        <!-- Toolbar: Filters & Live Search -->
+        <div class="toolbar">
+          <!-- Status Tabs -->
+          <div class="toolbar-tabs">
+            <button class="tab-btn active" data-filter="all">All Reviews</button>
+            <button class="tab-btn" data-filter="completed">Completed</button>
+            <button class="tab-btn" data-filter="in_progress">In Progress</button>
+            <button class="tab-btn" data-filter="queued">Queued</button>
+            <button class="tab-btn" data-filter="failed">Failed</button>
+          </div>
+
+          <!-- Controls: Verdict Select & Search -->
+          <div class="toolbar-controls">
+            <select class="select-control" id="verdictSelect" title="Filter by Verdict">
+              <option value="all">All Verdicts</option>
+              <option value="approve">Approved</option>
+              <option value="request_changes">Changes Requested</option>
+              <option value="comment">Comment</option>
+            </select>
+
+            <div class="search-wrap">
+              <span class="search-icon">🔍</span>
+              <input type="text" class="search-input" id="searchInput" placeholder="Search repo, PR #, commit SHA..." aria-label="Search reviews">
+            </div>
+          </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="reviews-table">
+              <thead>
+                <tr>
+                  <th>Pull Request / Repository</th>
+                  <th>Status</th>
+                  <th>Verdict</th>
+                  <th>Findings (C / H / M / L)</th>
+                  <th>Duration</th>
+                  <th>Timestamp</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="reviewsTableBody">
+                <!-- Dynamically Populated by app.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty / Loading State Container -->
+          <div id="tableStateContainer" style="display:none;"></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- 3. Review Details Modal -->
+  <div class="modal-overlay" id="reviewModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-content">
+
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <div class="modal-title-row">
+            <h2 class="modal-title" id="modalTitle">Review Details</h2>
+            <span class="badge" id="modalStatusBadge">completed</span>
+            <span class="verdict-badge" id="modalVerdictBadge">Approved</span>
+          </div>
+          <div class="modal-meta-row">
+            <span>Repo: <strong id="modalRepoName" style="color:var(--text-primary);">—</strong></span>
+            <span>PR: <strong id="modalPrNumber" style="color:var(--accent-blue);">—</strong></span>
+            <span>Commit: <code id="modalCommitSha" style="color:var(--text-secondary);">—</code></span>
+            <span id="modalDuration">Duration: —</span>
+            <span id="modalWorkerId">Worker: —</span>
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <button class="btn btn-sm btn-primary" id="modalRetryBtn" style="display:none;">
+            ↻ Retry Review
+          </button>
+          <button class="btn btn-icon-only" id="modalCloseBtn" title="Close modal" aria-label="Close modal">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+
+        <!-- Error Message Banner (if failed) -->
+        <div id="modalErrorBox" style="display:none; background:var(--status-danger-bg); border:1px solid rgba(239,68,68,0.3); border-radius:var(--radius-md); padding:1rem;">
+          <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--status-danger); margin-bottom:0.25rem;">
+            ⚠️ Review Execution Failure
+          </div>
+          <div id="modalErrorMessage" style="font-size:0.8125rem; color:var(--text-primary); font-family:var(--font-mono);"></div>
+        </div>
+
+        <!-- Executive Summary Box -->
+        <div class="summary-box" id="modalSummaryBox">
+          <div class="summary-box-title">
+            <span>📋 Executive Review Summary</span>
+          </div>
+          <div id="modalSummaryContent"></div>
+        </div>
+
+        <!-- Findings Breakdown Grouped by Severity -->
+        <div>
+          <div class="findings-section-title">
+            <span>🔍 Defect & Security Findings <span id="modalFindingsCount" style="color:var(--text-muted); font-size:0.875rem;"></span></span>
+            <span style="font-size:0.75rem; color:var(--text-muted);">Enriched with Autonomous Investigation</span>
+          </div>
+
+          <div id="modalFindingsContainer">
+            <!-- Findings populated by app.js -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      PR Sentinel · Autonomous AI Pull Request Reviewer · Powered by Groq, LangGraph & FastAPI
+    </div>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
