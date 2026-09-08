@@ -22,21 +22,21 @@ Real-time KPI metrics, active worker heartbeats, finding severity distribution, 
 ### 2. Executive Review Summary & Verdict Inspector
 Instant review inspector displaying the overall verdict (`APPROVE`, `REQUEST_CHANGES`, `COMMENT`), risk assessment, and file summaries.
 
-![Executive Review Summary Modal](docs/images/02-review-details-modal.png)
+![Executive Review Summary Modal](docs/images/02-executive-summary.png)
 
 ---
 
 ### 3. Autonomous Root Cause & Finding Investigation
 Deep-dive defect inspection displaying exact diff line location, confidence score, root cause analysis, supporting evidence, potential impact, and actionable code fixes.
 
-![Autonomous Root Cause & Finding Investigation](docs/images/03-findings-investigation.png)
+![Autonomous Root Cause & Finding Investigation](docs/images/03-detect-and-findings.png)
 
 ---
 
 ### 4. GitHub PR Automated Review & Inline Comments
 Autonomous multi-line comments and batch review summaries posted directly onto GitHub Pull Request discussion threads.
 
-![GitHub PR Automated Review](docs/images/04-github-pr-review.png)
+*(Add your GitHub PR screenshot here as `docs/images/04-github-pr-review.png`)*
 
 ---
 
