@@ -33,12 +33,6 @@ Deep-dive defect inspection displaying exact diff line location, confidence scor
 
 ---
 
-### 4. GitHub PR Automated Review & Inline Comments
-Autonomous multi-line comments and batch review summaries posted directly onto GitHub Pull Request discussion threads.
-
-*(Add your GitHub PR screenshot here as `docs/images/04-github-pr-review.png`)*
-
----
 
 ## 🏗️ Architecture Overview
 
