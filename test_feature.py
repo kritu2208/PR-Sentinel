@@ -1,5 +1,6 @@
 ﻿def insecure_login(user_token):
-    # WARNING: Plaintext password comparison
-    if user_token == 'admin_pass_123':
+    # CRITICAL: Hardcoded JWT secret key
+    JWT_SECRET = 'super_secret_admin_token_999'
+    if user_token == JWT_SECRET:
         return True
     return False
